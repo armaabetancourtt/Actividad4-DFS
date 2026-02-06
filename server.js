@@ -20,7 +20,7 @@ async function initDB() {
         await fs.access(DATA_PATH).catch(() => fs.writeFile(DATA_PATH, '[]'));
         await fs.access(USERS_PATH).catch(() => fs.writeFile(USERS_PATH, '[]'));
     } catch (err) {
-        console.error("Error al inicializar archivos JSON:", err);
+        console.error(err);
     }
 }
 initDB();
@@ -36,7 +36,6 @@ const validarTarea = (req, res, next) => {
 const verificarSesion = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    
     if (!token) return res.status(401).json({ error: "No autorizado" });
 
     jwt.verify(token, SECRET_KEY, (err, user) => {
@@ -54,12 +53,13 @@ app.post('/api/register', async (req, res, next) => {
         const data = await fs.readFile(USERS_PATH, 'utf-8');
         const usuarios = JSON.parse(data || "[]");
 
-        if (usuarios.find(u => u.username === username)) return res.status(400).json({ error: "Usuario ya existe" });
+        if (usuarios.find(u => u.username === username)) {
+            return res.status(400).json({ error: "Usuario ya existe" });
+        }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
+        const hashedPassword = await bcrypt.hash(password, 10);
         usuarios.push({ id: Date.now(), username, password: hashedPassword });
+
         await fs.writeFile(USERS_PATH, JSON.stringify(usuarios, null, 2));
         res.status(201).json({ mensaje: "Registro exitoso" });
     } catch (err) { next(err); }
@@ -72,12 +72,17 @@ app.post('/api/login', async (req, res, next) => {
         const usuarios = JSON.parse(data || "[]");
         const user = usuarios.find(u => u.username === username);
 
-        if (user && await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '2h' });
-            res.json({ token, username: user.username });
-        } else {
-            res.status(401).json({ error: "Credenciales incorrectas" });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: "Credenciales incorrectas" });
         }
+
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            SECRET_KEY,
+            { expiresIn: '2h' }
+        );
+
+        res.json({ token, username: user.username });
     } catch (err) { next(err); }
 });
 
@@ -85,8 +90,7 @@ app.get('/api/usuarios', verificarSesion, async (req, res, next) => {
     try {
         const data = await fs.readFile(USERS_PATH, 'utf-8');
         const usuarios = JSON.parse(data || "[]");
-        const listaPublica = usuarios.map(u => ({ id: u.id, username: u.username }));
-        res.json(listaPublica);
+        res.json(usuarios.map(u => ({ id: u.id, username: u.username })));
     } catch (err) { next(err); }
 });
 
@@ -94,10 +98,12 @@ app.get('/api/tareas', verificarSesion, async (req, res, next) => {
     try {
         const data = await fs.readFile(DATA_PATH, 'utf-8');
         const tareas = JSON.parse(data || "[]");
-        const vinculadas = tareas.filter(t => 
-            t.usuarioId === req.user.id || t.asignadoA === req.user.username
+        res.json(
+            tareas.filter(t =>
+                t.usuarioId === req.user.id ||
+                t.asignadoA === req.user.username
+            )
         );
-        res.json(vinculadas);
     } catch (err) { next(err); }
 });
 
@@ -106,13 +112,13 @@ app.post('/api/tareas', verificarSesion, validarTarea, async (req, res, next) =>
         const data = await fs.readFile(DATA_PATH, 'utf-8');
         const tareas = JSON.parse(data || "[]");
 
-        const nueva = { 
+        const nueva = {
             ...req.body,
-            id: Date.now(), 
+            id: Date.now(),
             usuarioId: req.user.id,
             creadaPor: req.user.username
         };
-        
+
         tareas.push(nueva);
         await fs.writeFile(DATA_PATH, JSON.stringify(tareas, null, 2));
         res.status(201).json(nueva);
@@ -123,16 +129,19 @@ app.put('/api/tareas/:id', verificarSesion, async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const data = await fs.readFile(DATA_PATH, 'utf-8');
-        let tareas = JSON.parse(data || "[]");
+        const tareas = JSON.parse(data || "[]");
+
         const idx = tareas.findIndex(t => Number(t.id) === id);
-        
         if (idx === -1) return res.status(404).json({ error: "Tarea no encontrada" });
-        
-        const tienePermiso = tareas[idx].usuarioId === req.user.id || tareas[idx].asignadoA === req.user.username;
-        if (!tienePermiso) return res.status(403).json({ error: "No tienes permiso para modificar esta tarea" });
-        
-        tareas[idx] = { ...tareas[idx], ...req.body, id: tareas[idx].id, usuarioId: tareas[idx].usuarioId };
-        
+
+        if (
+            tareas[idx].usuarioId !== req.user.id &&
+            tareas[idx].asignadoA !== req.user.username
+        ) {
+            return res.status(403).json({ error: "Sin permiso" });
+        }
+
+        tareas[idx] = { ...tareas[idx], ...req.body };
         await fs.writeFile(DATA_PATH, JSON.stringify(tareas, null, 2));
         res.json(tareas[idx]);
     } catch (err) { next(err); }
@@ -142,18 +151,29 @@ app.delete('/api/tareas/:id', verificarSesion, async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const data = await fs.readFile(DATA_PATH, 'utf-8');
-        let tareas = JSON.parse(data || "[]");
-        
+        const tareas = JSON.parse(data || "[]");
+
         const tarea = tareas.find(t => Number(t.id) === id);
         if (!tarea) return res.status(404).json({ error: "No encontrada" });
 
-        const puedeBorrar = tarea.usuarioId === req.user.id || tarea.asignadoA === req.user.username;
-        if (!puedeBorrar) return res.status(403).json({ error: "No tienes permiso para eliminar esta tarea" });
+        if (
+            tarea.usuarioId !== req.user.id &&
+            tarea.asignadoA !== req.user.username
+        ) {
+            return res.status(403).json({ error: "Sin permiso" });
+        }
 
-        const filtradas = tareas.filter(t => Number(t.id) !== id);
-        await fs.writeFile(DATA_PATH, JSON.stringify(filtradas, null, 2));
+        await fs.writeFile(
+            DATA_PATH,
+            JSON.stringify(tareas.filter(t => Number(t.id) !== id), null, 2)
+        );
+
         res.json({ mensaje: "Tarea eliminada" });
     } catch (err) { next(err); }
+});
+
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.use((err, req, res, next) => {
