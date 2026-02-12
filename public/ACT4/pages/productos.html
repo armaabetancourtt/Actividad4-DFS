@@ -1,1 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audi</title>
+    <link rel="stylesheet" href="../css/productos.css">
+    <link rel="icon" type="image/png" href="../../ACT1/img/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
 
+    <div id="menu-icon">
+        <i class="fa-solid fa-bars"></i>
+    </div>
+
+    <nav id="nav-menu">
+        <div id="close-icon">
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        <ul id="nav-menu-list">
+            <li><a href="../../index.html">Inicio</a></li>
+            <li><a href="../../ACT2/pages/dashboard.html">Dashboard</a></li>
+            <li><a href="../../ACT2/pages/tareas.html">Gestor de Tareas</a></li>
+            <li><a href="productos.html">Gestor de Productos</a></li>
+            <li id="logout-item"><a href="#" id="btn-logout">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+
+    <header id="hero">
+        <div id="hero-overlay"></div>
+        <div id="hero-content">
+            <div id="logo">
+                <img src="../../ACT1/img/logo.webp" alt="Audi Logo">
+            </div>
+
+            <div id="form-container">
+                <article id="form-card">
+                    <h2 id="form-title">Gestor de Inventario</h2>
+                    <input type="hidden" id="edit-id-prod" value="">
+                    <div id="form-grid">
+                        <div class="input-group full-width">
+                            <label for="nombreProd">Modelo del Vehículo</label>
+                            <input type="text" id="nombreProd" placeholder="Ej. Audi RS e-tron GT" autocomplete="off">
+                        </div>
+                        <div class="input-group full-width">
+                            <label for="imagenProd">URL de Imagen</label>
+                            <input type="text" id="imagenProd" placeholder="https://dominio.com/imagen.jpg">
+                        </div>
+                        <div class="input-group">
+                            <label for="precioProd">Precio (USD)</label>
+                            <input type="number" id="precioProd" placeholder="0.00">
+                        </div>
+                        <div class="input-group">
+                            <label for="stockProd">Stock Disponible</label>
+                            <input type="number" id="stockProd" placeholder="Ej. 5">
+                        </div>
+                        <div class="input-group full-width">
+                            <label for="categoriaProd">Línea de Diseño</label>
+                            <select id="categoriaProd">
+                                <option value="SUV">SUV</option>
+                                <option value="Sedan">Sedan</option>
+                                <option value="Sportback">Sportback</option>
+                                <option value="e-tron">e-tron</option>
+                            </select>
+                        </div>
+                        <div id="form-actions" class="full-width">
+                            <button id="btn-save-prod" class="btn-audi" type="button">Registrar Vehículo</button>
+                            <button id="btn-cancel-prod" class="btn-cancel" type="button" style="display: none;">Cancelar</button>
+                        </div>
+                    </div>
+                    <p id="error-msg-prod" class="error" style="display: none;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Error: Verifique los datos técnicos.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </header>
+
+    <main id="container">
+        <div class="status-bar">
+            <h3><i class="fa-solid fa-car-rear"></i> Catálogo de Productos</h3>
+        </div>
+        <ul id="product-grid" class="task-grid"></ul>
+    </main>
+
+    <footer id="footer">
+        <div id="footer-logo">
+            <img src="../../ACT1/img/logo.webp" alt="Audi Logo">
+        </div>
+                <div class="redes">
+            <a href="https://www.facebook.com/Audi" target="_blank">
+                <i class="fa-brands fa-facebook-f"></i> Facebook
+            </a>
+            <a href="https://www.instagram.com/audi/" target="_blank">
+                <i class="fa-brands fa-instagram"></i> Instagram
+            </a>
+            <a href="https://www.linkedin.com/company/audi-ag/" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-linkedin-in"></i> LinkedIn
+            </a>
+        </div>
+
+        <p class="copyright">
+            © 2026 Audi. Todos los Derechos Reservados.
+        </p>
+    </footer>
+
+    <script src="../js/productos.js"></script>
+</body>
+</html>
