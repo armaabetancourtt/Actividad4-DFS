@@ -166,8 +166,25 @@ body {
     transition: 0.4s;
 }
 
+@media (max-width: 1024px) {
+    #dashboard-container { width: 95%; }
+    .module-card { padding: 40px 20px; }
+}
+
 @media (max-width: 768px) {
-    #module-grid { grid-template-columns: 1fr; }
-    #welcome-section h1 { font-size: 1.5rem; }
     body { overflow-y: auto; }
+    #hero-dashboard { height: auto; min-height: 100vh; padding: 100px 0; }
+    #module-grid { grid-template-columns: 1fr; gap: 20px; }
+    #welcome-section h1 { font-size: 1.6rem; letter-spacing: 3px; }
+    #welcome-section p { margin-bottom: 30px; }
+    .module-card { padding: 30px; }
+    #nav-menu-list a { font-size: 1.5rem; letter-spacing: 3px; }
+    #logo img { width: 80px; }
+}
+
+@media (max-width: 480px) {
+    #welcome-section h1 { font-size: 1.3rem; }
+    .module-card h3 { font-size: 1.2rem; }
+    .card-icon { font-size: 2.5rem; }
+    #menu-icon { width: 45px; height: 45px; top: 15px; right: 15px; }
 }
